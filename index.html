@@ -468,6 +468,8 @@ button{touch-action:manipulation}
         <div class="field-group"><label class="lbl">Vision-Modell</label><input class="in" id="sVisionModel" list="modelList" placeholder="z. B. llama3.2-vision"></div>
       </div>
       <button class="btn ghost" id="btnLoadModels" style="width:100%;margin-bottom:6px;border:1px dashed var(--glass-line)">↻ Modelle laden</button>
+      <button class="btn" id="btnTestConn" style="width:100%;margin-bottom:6px">🔌 Verbindung testen</button>
+      <div id="connStatus" class="crop-hint" style="margin-bottom:4px"></div>
 
       <div class="section-label">Antworten</div>
       <div class="row2">
@@ -602,7 +604,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.0.0";
+const APP_VERSION="1.1.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -960,6 +962,18 @@ function friendlyError(e){
   return m;
 }
 
+async function testConnection(){
+  const st=$("#connStatus"); const set=(m,c)=>{ if(st){st.textContent=m;st.style.color=c;} };
+  set("Teste …","var(--ink-dim)");
+  const be=$("#sBackend").value;
+  try{
+    let extra="";
+    if(be==="ollama"){ const r=await fetch(trim($("#sOllamaUrl").value||settings.ollamaUrl)+"/api/tags"); if(!r.ok)throw new Error("HTTP "+r.status); const j=await r.json(); extra=" · "+((j.models||[]).length)+" Modelle"; }
+    else if(be==="openai"){ const r=await fetch(trim($("#sOpenaiUrl").value||settings.openaiUrl)+"/models",{headers:{"Authorization":"Bearer "+($("#sOpenaiKey").value||settings.openaiKey)}}); if(!r.ok)throw new Error("HTTP "+r.status); }
+    else { const r=await fetch("https://api.anthropic.com/v1/models",{headers:{"x-api-key":$("#sAnthropicKey").value||settings.anthropicKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"}}); if(!r.ok)throw new Error("HTTP "+r.status); }
+    set("Verbunden ✓"+extra,"var(--ok)");
+  }catch(e){ set("Fehlgeschlagen: "+((e&&e.message)||e)+" — URL, OLLAMA_ORIGINS=* und Netzwerk prüfen.","var(--danger)"); }
+}
 async function loadModels(){
   const dl=$("#modelList");
   try{
@@ -1290,6 +1304,7 @@ async function init(){
   // Settings
   $("#sBackend").onchange=updateBackendBoxes;
   $("#btnLoadModels").onclick=loadModels;
+  $("#btnTestConn").onclick=testConnection;
   $("#btnSaveSettings").onclick=saveSettingsUI;
   $("#sTemp").oninput=e=>$("#tempVal").textContent=parseFloat(e.target.value).toFixed(2);
   $("#sTtsSpeed").oninput=e=>$("#ttsSpeedVal").textContent=parseFloat(e.target.value).toFixed(2)+"×";
