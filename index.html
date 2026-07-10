@@ -323,6 +323,7 @@ button{touch-action:manipulation}
     <div class="rail-actions">
       <button class="btn primary grow" id="btnNew">+ Neue Persona</button>
     </div>
+    <div class="persona-search" style="padding:2px 12px 8px"><input id="personaFilter" class="in" placeholder="Persona suchen…" autocomplete="off" style="padding:9px 12px"></div>
     <div class="persona-list" id="personaList"></div>
     <div class="rail-foot">
       <button class="btn grow" id="btnSettings">⚙︎ Einstellungen</button>
@@ -604,7 +605,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.1.0";
+const APP_VERSION="1.2.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -689,7 +690,8 @@ function toggleTheme(){ settings.theme=settings.theme==="seele"?"kokoro":"seele"
 function renderRail(){
   const list=$("#personaList"); list.innerHTML="";
   if(!bots.length){ list.innerHTML=`<div style="padding:24px 12px;text-align:center;color:var(--ink-faint);font-size:13px;line-height:1.6">Noch keine Persona.<br>Erstelle deine erste oben.</div>`; return; }
-  bots.forEach(b=>{
+  const _q=((document.getElementById("personaFilter")||{}).value||"").toLowerCase().trim();
+  bots.filter(b=>!_q||(b.name||"").toLowerCase().includes(_q)||(b.persona||"").toLowerCase().includes(_q)).forEach(b=>{
     const el=document.createElement("div");
     el.className="persona"+(b.id===activeId?" active":"");
     el.style.setProperty("--pa",b.accent||"#ff7ae0");
@@ -1283,6 +1285,7 @@ async function init(){
   $("#btnTheme").onclick=toggleTheme;
   $("#backdropM").onclick=closeRail;
   $("#mobileMenu").onclick=openRail;
+  { const pf=document.getElementById("personaFilter"); if(pf)pf.addEventListener("input",renderRail); }
 
   $$("[data-close]").forEach(b=>b.onclick=()=>closeOverlay(b.dataset.close));
   $$(".overlay").forEach(o=>o.addEventListener("mousedown",e=>{if(e.target===o)closeOverlay(o.id);}));
