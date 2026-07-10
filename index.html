@@ -308,6 +308,7 @@ button{touch-action:manipulation}
   .brand h1{font-size:20px}
   .msg{max-width:92%}
 }
+.scrolldown{position:absolute;right:18px;bottom:88px;z-index:5;width:42px;height:42px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-strong);backdrop-filter:blur(14px);color:var(--ink);font-size:20px;display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(8px);transition:.2s;box-shadow:var(--shadow)}.scrolldown.show{opacity:1;pointer-events:auto;transform:none}
 </style>
 </head>
 <body>
@@ -605,7 +606,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.2.0";
+const APP_VERSION="1.3.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -745,6 +746,7 @@ async function renderStage(){
       </div>
     </div>
     <div class="messages" id="messages"></div>
+    <button class="scrolldown" id="scrollDown" aria-label="Nach unten">▾</button>
     <div class="composer">
       <button class="next" id="btnNext" title="Persona schreibt selbst weiter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg>Weiter</button>
       <div class="field"><textarea id="input" rows="1" placeholder="Nachricht … *Aktionen in Sternchen*"></textarea></div>
@@ -756,6 +758,7 @@ async function renderStage(){
   $("#btnClear").onclick=()=>clearChat(b.id);
   $("#btnNext").onclick=()=>continueBot();
   $("#btnSend").onclick=onSendClick;
+  { const _sd=$("#scrollDown"), _m=$("#messages"); if(_sd&&_m){ _m.addEventListener("scroll",()=>{ const nb=_m.scrollHeight-_m.scrollTop-_m.clientHeight<80; _sd.classList.toggle("show",!nb); }); _sd.onclick=()=>{ _m.scrollTop=_m.scrollHeight; }; } }
   const inp=$("#input");
   inp.addEventListener("input",autoGrow);
   inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();onSendClick();}});
