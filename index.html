@@ -309,6 +309,7 @@ button{touch-action:manipulation}
   .msg{max-width:92%}
 }
 .scrolldown{position:absolute;right:18px;bottom:88px;z-index:5;width:42px;height:42px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-strong);backdrop-filter:blur(14px);color:var(--ink);font-size:20px;display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(8px);transition:.2s;box-shadow:var(--shadow)}.scrolldown.show{opacity:1;pointer-events:auto;transform:none}
+.msg-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.mtool{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ink-dim);background:rgba(255,255,255,.06);border:1px solid var(--glass-line);padding:5px 10px;border-radius:11px;cursor:pointer;transition:.15s}.mtool:hover{background:rgba(255,255,255,.13);color:var(--ink)}.mtool svg{width:13px;height:13px}
 </style>
 </head>
 <body>
@@ -606,7 +607,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.3.0";
+const APP_VERSION="1.4.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -775,7 +776,7 @@ async function renderMessages(){
   const box=$("#messages"); if(!box)return;
   const b=bots.find(x=>x.id===activeId);
   const msgs=await loadMsgs(activeId);
-  box.innerHTML=""; msgs.forEach(m=>{ const e=msgEl(m,b); if(m.role!=="user") attachSpeak(e,m.content,b); box.appendChild(e); }); scrollBottom();
+  box.innerHTML=""; msgs.forEach(m=>{ const e=msgEl(m,b); if(m.role!=="user") attachSpeak(e,m.content,b); addCopyBtn(e,m.content); box.appendChild(e); }); scrollBottom();
 }
 function msgEl(m,b){
   const el=document.createElement("div");
@@ -903,6 +904,7 @@ async function streamAssistant(transient){
       const finalText=acc.trim();
       msgs.push({role:"assistant",content:finalText,ts:Date.now()}); await saveMsgs(b.id);
       if(settings.ttsEnabled){ const sb=attachSpeak(el,finalText,b); if(settings.ttsAutoRead&&sb) speak(finalText,(b.voiceGender)||"female",sb); }
+      addCopyBtn(el,finalText);
     }
     else el.remove();
   }catch(e){
@@ -1047,6 +1049,14 @@ async function speak(text,voiceGender,btn){
     if(!(e&&e.name==="AbortError")){ console.error(e); toast("Vorlesen fehlgeschlagen – Server/Stimme prüfen"); }
     ttsState.btn=null; ttsState.ac=null;
   }
+}
+function addCopyBtn(el,text){
+  const bub=el&&el.querySelector(".bubble"); if(!bub)return;
+  let tools=bub.querySelector(".msg-tools"); if(!tools){ tools=document.createElement("div"); tools.className="msg-tools"; bub.appendChild(tools); }
+  const btn=document.createElement("button"); btn.className="mtool"; btn.type="button"; btn.title="Kopieren";
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Kopieren</span>';
+  btn.onclick=()=>{ (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(text):Promise.reject()).then(()=>toast("Kopiert")).catch(()=>toast("Kopieren nicht möglich")); };
+  tools.appendChild(btn);
 }
 function attachSpeak(el,getText,b){
   if(!settings.ttsEnabled)return;
