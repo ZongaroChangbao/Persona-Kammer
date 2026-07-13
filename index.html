@@ -607,7 +607,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.4.0";
+const APP_VERSION="1.5.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -742,6 +742,7 @@ async function renderStage(){
         <div class="h-sub" id="hSub"></div>
       </div>
       <div class="head-btns">
+        <button class="btn icon" id="btnRegen" title="Letzte Antwort neu generieren">↻</button>
         <button class="btn icon" id="btnEditBot" title="Bearbeiten">✎</button>
         <button class="btn icon" id="btnClear" title="Verlauf leeren">⌫</button>
       </div>
@@ -758,6 +759,7 @@ async function renderStage(){
   $("#btnEditBot").onclick=()=>openEditor(b.id);
   $("#btnClear").onclick=()=>clearChat(b.id);
   $("#btnNext").onclick=()=>continueBot();
+  $("#btnRegen").onclick=regenerateLast;
   $("#btnSend").onclick=onSendClick;
   { const _sd=$("#scrollDown"), _m=$("#messages"); if(_sd&&_m){ _m.addEventListener("scroll",()=>{ const nb=_m.scrollHeight-_m.scrollTop-_m.clientHeight<80; _sd.classList.toggle("show",!nb); }); _sd.onclick=()=>{ _m.scrollTop=_m.scrollHeight; }; } }
   const inp=$("#input");
@@ -929,6 +931,13 @@ async function onSendClick(){
   inp.value=""; inp.style.height="auto";
   await renderMessages();
   streamAssistant(null);
+}
+async function regenerateLast(){
+  const b=bots.find(x=>x.id===activeId); if(!b||generating)return;
+  const msgs=await loadMsgs(b.id); let removed=false;
+  for(let i=msgs.length-1;i>=0;i--){ if(msgs[i].role==="assistant"){ msgs.splice(i,1); removed=true; break; } }
+  if(!removed){ toast("Keine Antwort zum Neugenerieren"); return; }
+  await saveMsgs(b.id); await renderMessages(); streamAssistant(null);
 }
 async function continueBot(isGreeting){
   if(generating)return;
