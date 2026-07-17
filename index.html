@@ -310,6 +310,7 @@ button{touch-action:manipulation}
 }
 .scrolldown{position:absolute;right:18px;bottom:88px;z-index:5;width:42px;height:42px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-strong);backdrop-filter:blur(14px);color:var(--ink);font-size:20px;display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(8px);transition:.2s;box-shadow:var(--shadow)}.scrolldown.show{opacity:1;pointer-events:auto;transform:none}
 .msg-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.mtool{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ink-dim);background:rgba(255,255,255,.06);border:1px solid var(--glass-line);padding:5px 10px;border-radius:11px;cursor:pointer;transition:.15s}.mtool:hover{background:rgba(255,255,255,.13);color:var(--ink)}.mtool svg{width:13px;height:13px}
+.bubble{font-size:calc(14.5px*var(--fs,1))!important}
 </style>
 </head>
 <body>
@@ -553,6 +554,14 @@ button{touch-action:manipulation}
       </div>
       <div class="field-group"><label class="lbl">Weiteres <span class="hint">— optional</span></label><textarea class="in" id="pNote" style="min-height:60px" placeholder="Was Personas sonst über dich wissen sollen …"></textarea></div>
 
+      <div class="section-label">Darstellung</div>
+      <div class="field-group"><label class="lbl">Schriftgröße</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" id="fsDown" style="flex:1">A−</button>
+          <span id="fsVal" style="min-width:56px;text-align:center;font-weight:700">100%</span>
+          <button class="btn" id="fsUp" style="flex:1">A+</button>
+        </div>
+      </div>
       <div class="section-label">Daten</div>
       <div class="row2">
         <button class="btn" id="btnExport">⬇ Backup exportieren</button>
@@ -607,7 +616,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.6.0";
+const APP_VERSION="1.7.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -677,6 +686,7 @@ async function saveMsgs(id){ await idbSet("chat:"+id,msgCache[id]||[]); }
 /* ============================================================
    Theme
    ============================================================ */
+function applyFontScale(){ const v=settings.fontScale||1; document.documentElement.style.setProperty("--fs",v); const el=document.getElementById("fsVal"); if(el)el.textContent=Math.round(v*100)+"%"; }
 function applyTheme(){
   const t=THEMES[settings.theme]?settings.theme:"seele";
   document.documentElement.setAttribute("data-theme",t);
@@ -1315,6 +1325,9 @@ async function init(){
   cropBg.onZoom(z=>$("#bgZoom").value=z);
 
   $("#btnNew").onclick=()=>openEditor();
+  applyFontScale();
+  $("#fsDown").onclick=()=>{ settings.fontScale=Math.max(0.8,Math.round(((settings.fontScale||1)-0.1)*10)/10); saveSettings(); applyFontScale(); };
+  $("#fsUp").onclick=()=>{ settings.fontScale=Math.min(1.8,Math.round(((settings.fontScale||1)+0.1)*10)/10); saveSettings(); applyFontScale(); };
   $("#btnSettings").onclick=openSettings;
   $("#btnInfo").onclick=()=>openOverlay("infoOverlay");
   $("#btnTheme").onclick=toggleTheme;
