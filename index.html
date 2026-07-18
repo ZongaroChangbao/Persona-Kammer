@@ -311,6 +311,7 @@ button{touch-action:manipulation}
 .scrolldown{position:absolute;right:18px;bottom:88px;z-index:5;width:42px;height:42px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass-strong);backdrop-filter:blur(14px);color:var(--ink);font-size:20px;display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(8px);transition:.2s;box-shadow:var(--shadow)}.scrolldown.show{opacity:1;pointer-events:auto;transform:none}
 .msg-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.mtool{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ink-dim);background:rgba(255,255,255,.06);border:1px solid var(--glass-line);padding:5px 10px;border-radius:11px;cursor:pointer;transition:.15s}.mtool:hover{background:rgba(255,255,255,.13);color:var(--ink)}.mtool svg{width:13px;height:13px}
 .bubble{font-size:calc(14.5px*var(--fs,1))!important}
+.msg-time{font-size:10px;opacity:.5;margin-top:6px;font-weight:600;letter-spacing:.3px}
 </style>
 </head>
 <body>
@@ -563,6 +564,7 @@ button{touch-action:manipulation}
         </div>
       </div>
       <div class="switch-row"><div class="txt">Vibration bei neuer Antwort<small>nur auf dem Handy spürbar</small></div><div class="switch" id="swVibrate"></div></div>
+      <div class="switch-row"><div class="txt">Zeitstempel anzeigen<small>Uhrzeit unter jeder Nachricht</small></div><div class="switch" id="swTime"></div></div>
       <div class="section-label">Daten</div>
       <div class="row2">
         <button class="btn" id="btnExport">⬇ Backup exportieren</button>
@@ -617,7 +619,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.8.0";
+const APP_VERSION="2.0.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -798,7 +800,7 @@ function msgEl(m,b){
   el.className="msg "+(m.role==="user"?"user":"bot");
   const src=avatarSrc(b);
   const av=m.role==="user"?`<div class="m-av"><span>Du</span></div>`:(src?`<div class="m-av"><img src="${src}"></div>`:`<div class="m-av"><span>${initials(b&&b.name)}</span></div>`);
-  el.innerHTML=`${av}<div class="bubble${m.error?" err":""}">${m.error?m.content:renderContent(m.content)}</div>`;
+  el.innerHTML=`${av}<div class="bubble${m.error?" err":""}">${m.error?m.content:renderContent(m.content)}${(settings.showTime&&m.ts)?`<div class="msg-time">${new Date(m.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>`:""}</div>`;
   return el;
 }
 function scrollBottom(){const box=$("#messages");if(box)box.scrollTop=box.scrollHeight;}
@@ -1239,7 +1241,7 @@ function openSettings(){
   $("#sTtsUrl").value=settings.ttsUrl; $("#sTtsKey").value=settings.ttsKey; $("#sTtsModel").value=settings.ttsModel;
   $("#sVoiceF").value=settings.ttsVoiceFemale; $("#sVoiceM").value=settings.ttsVoiceMale;
   $("#sTtsSpeed").value=settings.ttsSpeed; $("#ttsSpeedVal").textContent=Number(settings.ttsSpeed).toFixed(2)+"×";
-  setSwitch("swVibrate",settings.vibrate);
+  setSwitch("swVibrate",settings.vibrate); setSwitch("swTime",settings.showTime);
   updateBackendBoxes(); openOverlay("settingsOverlay");
 }
 function updateBackendBoxes(){ const b=$("#sBackend").value; $$(".backend-box").forEach(x=>x.style.display=x.dataset.b===b?"block":"none"); }
@@ -1272,6 +1274,7 @@ async function saveSettingsUI(){
   settings.ttsVoiceMale=$("#sVoiceM").value.trim()||"onyx";
   settings.ttsSpeed=parseFloat($("#sTtsSpeed").value)||1;
   settings.vibrate=$("#swVibrate").classList.contains("on");
+  settings.showTime=$("#swTime").classList.contains("on");
   await saveSettings(); applyTheme();
   closeOverlay("settingsOverlay");
   if(activeId)await renderStage();
