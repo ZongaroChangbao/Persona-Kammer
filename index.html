@@ -562,6 +562,7 @@ button{touch-action:manipulation}
           <button class="btn" id="fsUp" style="flex:1">A+</button>
         </div>
       </div>
+      <div class="switch-row"><div class="txt">Vibration bei neuer Antwort<small>nur auf dem Handy spürbar</small></div><div class="switch" id="swVibrate"></div></div>
       <div class="section-label">Daten</div>
       <div class="row2">
         <button class="btn" id="btnExport">⬇ Backup exportieren</button>
@@ -616,7 +617,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="1.7.0";
+const APP_VERSION="1.8.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -917,6 +918,7 @@ async function streamAssistant(transient){
     if(acc.trim()){
       const finalText=acc.trim();
       msgs.push({role:"assistant",content:finalText,ts:Date.now()}); await saveMsgs(b.id);
+      if(settings.vibrate&&navigator.vibrate)navigator.vibrate(30);
       if(settings.ttsEnabled){ const sb=attachSpeak(el,finalText,b); if(settings.ttsAutoRead&&sb) speak(finalText,(b.voiceGender)||"female",sb); }
       addCopyBtn(el,finalText);
     }
@@ -1237,6 +1239,7 @@ function openSettings(){
   $("#sTtsUrl").value=settings.ttsUrl; $("#sTtsKey").value=settings.ttsKey; $("#sTtsModel").value=settings.ttsModel;
   $("#sVoiceF").value=settings.ttsVoiceFemale; $("#sVoiceM").value=settings.ttsVoiceMale;
   $("#sTtsSpeed").value=settings.ttsSpeed; $("#ttsSpeedVal").textContent=Number(settings.ttsSpeed).toFixed(2)+"×";
+  setSwitch("swVibrate",settings.vibrate);
   updateBackendBoxes(); openOverlay("settingsOverlay");
 }
 function updateBackendBoxes(){ const b=$("#sBackend").value; $$(".backend-box").forEach(x=>x.style.display=x.dataset.b===b?"block":"none"); }
@@ -1268,6 +1271,7 @@ async function saveSettingsUI(){
   settings.ttsVoiceFemale=$("#sVoiceF").value.trim()||"nova";
   settings.ttsVoiceMale=$("#sVoiceM").value.trim()||"onyx";
   settings.ttsSpeed=parseFloat($("#sTtsSpeed").value)||1;
+  settings.vibrate=$("#swVibrate").classList.contains("on");
   await saveSettings(); applyTheme();
   closeOverlay("settingsOverlay");
   if(activeId)await renderStage();
