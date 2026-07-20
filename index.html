@@ -428,6 +428,7 @@ button{touch-action:manipulation}
     </div>
     <div class="sheet-foot">
       <button class="btn" id="btnDelete" style="margin-right:auto;display:none;color:var(--danger)">Löschen</button>
+      <button class="btn" id="btnDuplicate" style="display:none">Duplizieren</button>
       <button class="btn" data-close="editorOverlay">Abbrechen</button>
       <button class="btn primary" id="btnSaveBot">Speichern</button>
     </div>
@@ -619,7 +620,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="2.0.0";
+const APP_VERSION="2.1.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -1169,6 +1170,7 @@ function openEditor(id){
   editorAccent=(b&&b.accent)||"#ff7ae0";
   selectSwatch(editorAccent); $("#fAccent").value=editorAccent;
   $("#btnDelete").style.display=b?"inline-flex":"none";
+  $("#btnDuplicate").style.display=b?"inline-flex":"none";
   openOverlay("editorOverlay");
   requestAnimationFrame(()=>{
     cropAv.load((b&&b.avSrc)||"", (b&&b.avCrop)||null);
@@ -1178,6 +1180,12 @@ function openEditor(id){
 }
 function selectSwatch(hex){ $$("#swatches .sw").forEach(s=>s.classList.toggle("sel",s.dataset.c&&s.dataset.c.toLowerCase()===hex.toLowerCase())); }
 
+async function duplicatePersona(){
+  if(!editingId)return; const src=bots.find(x=>x.id===editingId); if(!src)return;
+  const copy=JSON.parse(JSON.stringify(src)); copy.id=uid(); copy.name=(src.name||"Persona")+" Kopie"; copy.createdAt=Date.now();
+  bots.unshift(copy); await saveBots(); msgCache[copy.id]=[]; await saveMsgs(copy.id);
+  closeOverlay("editorOverlay"); activeId=copy.id; saveActive(); renderRail(); await renderStage(); toast("Persona dupliziert");
+}
 async function commitBot(){
   const name=$("#fName").value.trim();
   if(!name){toast("Bitte einen Namen eingeben");$("#fName").focus();return;}
@@ -1348,6 +1356,7 @@ async function init(){
   // Editor
   $("#btnSaveBot").onclick=commitBot;
   $("#btnDelete").onclick=deleteBot;
+  $("#btnDuplicate").onclick=duplicatePersona;
   $("#avPick").onclick=()=>$("#fileAv").click();
   $("#bgPick").onclick=()=>$("#fileBg").click();
   $("#fileAv").onchange=e=>{pickInto(cropAv,e.target.files[0]);e.target.value="";};
