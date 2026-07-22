@@ -621,7 +621,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="2.2.0";
+const APP_VERSION="2.3.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -795,7 +795,7 @@ async function renderMessages(){
   const box=$("#messages"); if(!box)return;
   const b=bots.find(x=>x.id===activeId);
   const msgs=await loadMsgs(activeId);
-  box.innerHTML=""; msgs.forEach(m=>{ const e=msgEl(m,b); if(m.role!=="user") attachSpeak(e,m.content,b); addCopyBtn(e,m.content); addEditBtn(e,m); box.appendChild(e); }); scrollBottom();
+  box.innerHTML=""; msgs.forEach(m=>{ const e=msgEl(m,b); if(m.role!=="user") attachSpeak(e,m.content,b); addCopyBtn(e,m.content); addEditBtn(e,m); addDeleteBtn(e,m); box.appendChild(e); }); scrollBottom();
 }
 function msgEl(m,b){
   const el=document.createElement("div");
@@ -924,7 +924,7 @@ async function streamAssistant(transient){
       const _newMsg={role:"assistant",content:finalText,ts:Date.now()}; msgs.push(_newMsg); await saveMsgs(b.id);
       if(settings.vibrate&&navigator.vibrate)navigator.vibrate(30);
       if(settings.ttsEnabled){ const sb=attachSpeak(el,finalText,b); if(settings.ttsAutoRead&&sb) speak(finalText,(b.voiceGender)||"female",sb); }
-      addCopyBtn(el,finalText); addEditBtn(el,_newMsg);
+      addCopyBtn(el,finalText); addEditBtn(el,_newMsg); addDeleteBtn(el,_newMsg);
     }
     else el.remove();
   }catch(e){
@@ -1100,6 +1100,14 @@ function addEditBtn(el,m){
   let tools=bub.querySelector(".msg-tools"); if(!tools){ tools=document.createElement("div"); tools.className="msg-tools"; bub.appendChild(tools); }
   const btn=document.createElement("button"); btn.className="mtool"; btn.type="button"; btn.title="Bearbeiten";
   btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>Bearbeiten</span>'; btn.onclick=()=>startEdit(el,m); tools.appendChild(btn);
+}
+function addDeleteBtn(el,m){
+  const bub=el&&el.querySelector(".bubble"); if(!bub)return;
+  let tools=bub.querySelector(".msg-tools"); if(!tools){ tools=document.createElement("div"); tools.className="msg-tools"; bub.appendChild(tools); }
+  const btn=document.createElement("button"); btn.className="mtool"; btn.type="button"; btn.title="Löschen";
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg><span>Löschen</span>';
+  btn.onclick=async()=>{ const arr=await loadMsgs(activeId); const i=arr.indexOf(m); if(i>=0)arr.splice(i,1); await saveMsgs(activeId); await renderMessages(); toast("Gelöscht"); };
+  tools.appendChild(btn);
 }
 function attachSpeak(el,getText,b){
   if(!settings.ttsEnabled)return;
