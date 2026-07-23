@@ -430,6 +430,7 @@ button{touch-action:manipulation}
     <div class="sheet-foot">
       <button class="btn" id="btnDelete" style="margin-right:auto;display:none;color:var(--danger)">Löschen</button>
       <button class="btn" id="btnDuplicate" style="display:none">Duplizieren</button>
+      <button class="btn" id="btnPromptPreview">Prompt-Vorschau</button>
       <button class="btn" data-close="editorOverlay">Abbrechen</button>
       <button class="btn primary" id="btnSaveBot">Speichern</button>
     </div>
@@ -614,6 +615,7 @@ button{touch-action:manipulation}
   </div>
 </div>
 
+<div class="overlay" id="promptOverlay"><div class="sheet glass"><div class="sheet-head"><h3>System-Prompt (Vorschau)</h3><button class="x" data-close="promptOverlay">×</button></div><div class="sheet-body"><pre id="promptText" style="white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.55;color:var(--ink-dim);margin:0"></pre></div><div class="sheet-foot"><button class="btn primary" data-close="promptOverlay">Schließen</button></div></div></div>
 <input type="file" id="fileImport" accept="application/json" hidden>
 <input type="file" id="fileAv" accept="image/*" hidden>
 <input type="file" id="fileBg" accept="image/*" hidden>
@@ -621,7 +623,7 @@ button{touch-action:manipulation}
 
 <script>
 "use strict";
-const APP_VERSION="2.3.0";
+const APP_VERSION="2.4.0";
 /* ============================================================
    IndexedDB (Key-Value)
    ============================================================ */
@@ -844,6 +846,13 @@ function userBlock(b){
   return "Über den Nutzer, mit dem du sprichst:\n"+lines.join("\n")+"\nBeziehe das natürlich ein und sprich die Person entsprechend an.";
 }
 
+function showPromptPreview(){
+  const src=editingId?bots.find(x=>x.id===editingId):null;
+  const tmp={ name:($("#fName").value.trim()||"Charakter"), persona:$("#fPersona").value.trim(), userContext:$("#fUserCtx").value.trim() };
+  const desc=src?(src.visionCache||""):"";
+  const el=document.getElementById("promptText"); if(el)el.textContent=systemPrompt(tmp,desc);
+  openOverlay("promptOverlay");
+}
 function systemPrompt(b,visionDesc){
   let p="Du verkörperst durchgehend die folgende Person und bleibst vollständig in dieser Rolle:\n\n";
   p+="Name: "+b.name+"\n";
@@ -1382,6 +1391,7 @@ async function init(){
   $("#btnSaveBot").onclick=commitBot;
   $("#btnDelete").onclick=deleteBot;
   $("#btnDuplicate").onclick=duplicatePersona;
+  $("#btnPromptPreview").onclick=showPromptPreview;
   $("#avPick").onclick=()=>$("#fileAv").click();
   $("#bgPick").onclick=()=>$("#fileBg").click();
   $("#fileAv").onchange=e=>{pickInto(cropAv,e.target.files[0]);e.target.value="";};
